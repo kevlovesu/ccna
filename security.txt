@@ -1,0 +1,178 @@
+=======================
+IP SSHv2
+!
+conf t
+username admin privi 15 secret pass
+ip domain-name ccna.com 
+crypt key genera rsa
+1024
+ip ssh ver 2
+line vty 0 14
+login local
+!
+
+=====================
+FW-VPN1
+!
+192.168.59.133
+
+conf t
+no logging console
+int g0/1
+ ip add dhcp
+ no shut
+end
+
+
+======================
+conf t
+!
+line vty 0 14
+ exec-timeout 0 0
+int gi 2											
+ ip add 192.168.102.8 255.255.255.0
+int gi 3
+ ip add 192.168.103.8 255.255.255.0
+
+======================================
+LINUX
+
+sudo ifconfig eth0 192.168.102.51 netmask 255.255.255.0 up  
+sudo route add default gw 192.168.102.8
+
+
+sudo ifconfig eth0 192.168.102.51 netmask 255.255.255.0 up 
+sudo route add default gw 192.168.103.8
+
+
+==============================
+FW-ROUTER
+
+conf t
+service finger
+service udp-small-servers
+service tcp-small-servers
+ip dns server
+==============================
+C:\Windows\System32\drivers\etc
+
+192.168.102.8 www.web2.com
+192.168.103.8 www.web3.com
+
+=================================
+NEXT Gen FW	
+:Packet Filter Firewall:
+
+conf t
+ip host www.web2.com 192.168.102.8
+ip host www.web3.com 192.168.103.8
+no access-list 100
+
+!!protocol = hacker = victim = port
+
+access-list 100 Permit tcp any host www.web2.com eq 80
+access-list 100 Permit icmp any host www.web2.com 
+
+access-list 100 Permit tcp any host www.web3.com eq 443
+access-list 100 Permit tcp any host www.web3.com eq 22
+int gi 2
+ no ip access-group 100 in
+int gi 3
+ no ip access-group 100 in
+end
+
+
+
+no access-list 101
+access-list 101 Permit tcp any host www.web2.com eq 22
+access-list 101 Permit tcp any host www.web2.com eq 443
+access-list 101 Permit tcp any host www.web2.com eq 73
+access-list 101 Permit tcp any host www.web2.com eq 80
+access-list 101 Permit tcp any host www.web2.com eq 53
+access-list 101 Permit icmp any host www.web3.com
+
+
+int gi 2
+ ip access-group 101 in
+int gi 3
+ ip access-group 101 in
+end
+
+int gi 2
+ no ip access-group 101 in
+int gi 3
+ no ip access-group 101 in
+end
+
+
+======================================
+Extended
+
+access-list 3 permit tcp host www.web2.com eq 22
+access-list 3 permit tcp host www.web2.com eq 80
+
+access-list 3 permit tcp host www.web3.com eq 53
+access-list 3 permit tcp host www.web3.com eq 443
+access-list 3 permit icmp host www.web3.com
+
+deny tcp host 192.168.102.51 host www.web2.com eq 
+========
+102 = cant ping and http web2
+103 cant ssh telnet web3
+========
+
+conf t
+access-list 8 permit 192.168.102.0 0.0.0.255
+access-list 8 permit 192.168.103.0 0.0.0.255
+
+ip nat inside source static 192.168.102.51 192.168.108.69
+ip nat inside source static 192.168.103.51 192.168.108.88
+ip nat inside source list 8 int gi 1 overload
+
+int gi 1
+ ip nat outside
+int gi 2 
+ ip nat inside
+int gi 3
+ ip nat inside
+end
+
+ ======================
+ conf t
+ 
+ ntp server time.google.com
+ end
+ show ntp associations
+ show clock
+
+
+=======================
+conf t
+ip domain-name rivan.com
+crypto key generate rsa
+ip ssh ver 2
+
+======================
+conf t
+
+ip dhcp excluded-add 192.168.103.1 192.168.103.201
+ip dhcp pool linux103
+ netw 192.168.103.0 255.255.255.0
+ default 192.168.103.8 
+ dns-server 8.8.8.8
+ domain-name linux.com
+end
+
+conf t
+
+ip dhcp excluded-add 192.168.102.1 192.168.102.201
+ip dhcp pool linux102
+ netw 192.168.102.0 255.255.255.0
+ default 192.168.102.8 
+ dns-server 8.8.8.8
+ domain-name linux.com
+end
+
+=====================================
+
+
